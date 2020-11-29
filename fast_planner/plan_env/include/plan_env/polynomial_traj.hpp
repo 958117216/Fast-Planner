@@ -6,7 +6,7 @@
 
 using std::vector;
 
-class PolynomialTraj {
+class PolynomialTraj {  //轨迹多项式
 private:
   vector<double> times;        // time of each segment
   vector<vector<double>> cxs;  // coefficient of x of each segment, from high order to low
@@ -16,7 +16,7 @@ private:
   double time_sum;
   int num_seg;
 
-  /* evaluation */
+  /* evaluation 评估*/
   vector<Eigen::Vector3d> traj_vec3d;
   double length;
 

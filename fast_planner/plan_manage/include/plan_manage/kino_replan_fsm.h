@@ -5,8 +5,9 @@
 #include <algorithm>
 #include <iostream>
 #include <nav_msgs/Path.h>
-#include <ros/ros.h>
-#include <std_msgs/Empty.h>
+#include <ros/ros.h> //ros/ros.h为ros系统基本功能所需的头文件
+#include <std_msgs/Empty.h> 
+//std_msgs/String.h为std_msgs包中的一个消息头文件，由String.msg文件生成
 #include <vector>
 #include <visualization_msgs/Marker.h>
 
@@ -52,6 +53,7 @@ private:
   enum TARGET_TYPE { MANUAL_TARGET = 1, PRESET_TARGET = 2, REFENCE_PATH = 3 };
 
   /* planning utils */
+  //定义一个unique_ptr类指针，但他们暂时为空NULL
   FastPlannerManager::Ptr planner_manager_;
   PlanningVisualization::Ptr visualization_;
 

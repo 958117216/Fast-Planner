@@ -16,30 +16,30 @@ const int BsplineOptimizer::NORMAL_PHASE =
     BsplineOptimizer::SMOOTHNESS | BsplineOptimizer::DISTANCE | BsplineOptimizer::FEASIBILITY;
 
 void BsplineOptimizer::setParam(ros::NodeHandle& nh) {
-  nh.param("optimization/lambda1", lambda1_, -1.0);
-  nh.param("optimization/lambda2", lambda2_, -1.0);
-  nh.param("optimization/lambda3", lambda3_, -1.0);
-  nh.param("optimization/lambda4", lambda4_, -1.0);
+  nh.param("optimization/lambda1", lambda1_, -1.0);//10
+  nh.param("optimization/lambda2", lambda2_, -1.0);//0.8
+  nh.param("optimization/lambda3", lambda3_, -1.0);//0.00001
+  nh.param("optimization/lambda4", lambda4_, -1.0);//0.01
   nh.param("optimization/lambda5", lambda5_, -1.0);
   nh.param("optimization/lambda6", lambda6_, -1.0);
-  nh.param("optimization/lambda7", lambda7_, -1.0);
+  nh.param("optimization/lambda7", lambda7_, -1.0);//100
   nh.param("optimization/lambda8", lambda8_, -1.0);
 
-  nh.param("optimization/dist0", dist0_, -1.0);
-  nh.param("optimization/max_vel", max_vel_, -1.0);
-  nh.param("optimization/max_acc", max_acc_, -1.0);
+  nh.param("optimization/dist0", dist0_, -1.0);//0.7
+  nh.param("optimization/max_vel", max_vel_, -1.0);//3
+  nh.param("optimization/max_acc", max_acc_, -1.0);//2
   nh.param("optimization/visib_min", visib_min_, -1.0);
   nh.param("optimization/dlmin", dlmin_, -1.0);
   nh.param("optimization/wnl", wnl_, -1.0);
 
-  nh.param("optimization/max_iteration_num1", max_iteration_num_[0], -1);
-  nh.param("optimization/max_iteration_num2", max_iteration_num_[1], -1);
-  nh.param("optimization/max_iteration_num3", max_iteration_num_[2], -1);
-  nh.param("optimization/max_iteration_num4", max_iteration_num_[3], -1);
-  nh.param("optimization/max_iteration_time1", max_iteration_time_[0], -1.0);
-  nh.param("optimization/max_iteration_time2", max_iteration_time_[1], -1.0);
-  nh.param("optimization/max_iteration_time3", max_iteration_time_[2], -1.0);
-  nh.param("optimization/max_iteration_time4", max_iteration_time_[3], -1.0);
+  nh.param("optimization/max_iteration_num1", max_iteration_num_[0], -1);//2
+  nh.param("optimization/max_iteration_num2", max_iteration_num_[1], -1);//300
+  nh.param("optimization/max_iteration_num3", max_iteration_num_[2], -1);//200
+  nh.param("optimization/max_iteration_num4", max_iteration_num_[3], -1);//200
+  nh.param("optimization/max_iteration_time1", max_iteration_time_[0], -1.0);//0.0001
+  nh.param("optimization/max_iteration_time2", max_iteration_time_[1], -1.0);//0.005
+  nh.param("optimization/max_iteration_time3", max_iteration_time_[2], -1.0);//0.003
+  nh.param("optimization/max_iteration_time4", max_iteration_time_[3], -1.0);//0.003
 
   nh.param("optimization/algorithm1", algorithm1_, -1);
   nh.param("optimization/algorithm2", algorithm2_, -1);
@@ -53,6 +53,7 @@ void BsplineOptimizer::setEnvironment(const EDTEnvironment::Ptr& env) {
 void BsplineOptimizer::setControlPoints(const Eigen::MatrixXd& points) {
   control_points_ = points;
   dim_            = control_points_.cols();
+  ROS_INFO_STREAM("control dim: " << dim_);
 }
 
 void BsplineOptimizer::setBsplineInterval(const double& ts) { bspline_interval_ = ts; }
@@ -91,7 +92,7 @@ Eigen::MatrixXd BsplineOptimizer::BsplineOptimizeTraj(const Eigen::MatrixXd& poi
   setControlPoints(points);
   setBsplineInterval(ts);
   setCostFunction(cost_function);
-  setTerminateCond(max_num_id, max_time_id);
+  setTerminateCond(max_num_id, max_time_id);// 1 1
 
   optimize();
   return this->control_points_;

@@ -60,15 +60,15 @@ struct MappingParameters {
   /* camera parameters */
   double cx_, cy_, fx_, fy_;
 
-  /* depth image projection filtering */
+  /* depth image projection filtering 深度图投影滤波*/
   double depth_filter_maxdist_, depth_filter_mindist_, depth_filter_tolerance_;
   int depth_filter_margin_;
   bool use_depth_filter_;
-  double k_depth_scaling_factor_;
+  double k_depth_scaling_factor_;  //1000
   int skip_pixel_;
 
   /* raycasting */
-  double p_hit_, p_miss_, p_min_, p_max_, p_occ_;  // occupancy probability
+  double p_hit_, p_miss_, p_min_, p_max_, p_occ_;  // occupancy probability 占用几率
   double prob_hit_log_, prob_miss_log_, clamp_min_log_, clamp_max_log_,
       min_occupancy_log_;                   // logit of occupancy probability
   double min_ray_length_, max_ray_length_;  // range of doing raycasting
@@ -89,6 +89,7 @@ struct MappingParameters {
 
 struct MappingData {
   // main map data, occupancy of each voxel and Euclidean distance
+  //每个体素的占有率和欧氏距离
 
   std::vector<double> occupancy_buffer_;
   std::vector<char> occupancy_buffer_neg;
@@ -115,7 +116,7 @@ struct MappingData {
   bool has_first_depth_;
   bool has_odom_, has_cloud_;
 
-  // depth image projected point cloud
+  // depth image projected point cloud 深度图像投影点云
 
   vector<Eigen::Vector3d> proj_points_;
   int proj_points_cnt;
@@ -146,9 +147,10 @@ public:
 
   enum { POSE_STAMPED = 1, ODOMETRY = 2, INVALID_IDX = -10000 };
 
-  // occupancy map management
+  // occupancy map management 占用地图管理
   void resetBuffer();
   void resetBuffer(Eigen::Vector3d min, Eigen::Vector3d max);
+
 
   inline void posToIndex(const Eigen::Vector3d& pos, Eigen::Vector3i& id);
   inline void indexToPos(const Eigen::Vector3i& id, Eigen::Vector3d& pos);

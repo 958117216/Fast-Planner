@@ -13,13 +13,13 @@ FastPlannerManager::~FastPlannerManager() { std::cout << "des manager" << std::e
 void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
   /* read algorithm parameters */
 
-  nh.param("manager/max_vel", pp_.max_vel_, -1.0);
-  nh.param("manager/max_acc", pp_.max_acc_, -1.0);
-  nh.param("manager/max_jerk", pp_.max_jerk_, -1.0);
-  nh.param("manager/dynamic_environment", pp_.dynamic_, -1);
-  nh.param("manager/clearance_threshold", pp_.clearance_, -1.0);
-  nh.param("manager/local_segment_length", pp_.local_traj_len_, -1.0);
-  nh.param("manager/control_points_distance", pp_.ctrl_pt_dist, -1.0);
+  nh.param("manager/max_vel", pp_.max_vel_, -1.0);//3
+  nh.param("manager/max_acc", pp_.max_acc_, -1.0);//2
+  nh.param("manager/max_jerk", pp_.max_jerk_, -1.0);//4
+  nh.param("manager/dynamic_environment", pp_.dynamic_, -1);//0 动态环境
+  nh.param("manager/clearance_threshold", pp_.clearance_, -1.0);//0.2 间隙阀值
+  nh.param("manager/local_segment_length", pp_.local_traj_len_, -1.0);//6
+  nh.param("manager/control_points_distance", pp_.ctrl_pt_dist, -1.0);//0.5
 
   bool use_geometric_path, use_kinodynamic_path, use_topo_path, use_optimization, use_active_perception;
   nh.param("manager/use_geometric_path", use_geometric_path, false);
@@ -33,7 +33,7 @@ void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
   edt_environment_.reset(new EDTEnvironment);
   edt_environment_->setMap(sdf_map_);
 
-  if (use_geometric_path) {
+ if (use_geometric_path) {
     geo_path_finder_.reset(new Astar);
     geo_path_finder_->setParam(nh);
     geo_path_finder_->setEnvironment(edt_environment_);
@@ -48,7 +48,7 @@ void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
   }
 
   if (use_optimization) {
-    bspline_optimizers_.resize(10);
+    bspline_optimizers_.resize(10);//vv.resize(int n,element)表示调整容器vv的大小为n，扩容后的每个元素的值为element，默认为0
     for (int i = 0; i < 10; ++i) {
       bspline_optimizers_[i].reset(new BsplineOptimizer);
       bspline_optimizers_[i]->setParam(nh);
@@ -61,6 +61,7 @@ void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
     topo_prm_->setEnvironment(edt_environment_);
     topo_prm_->init(nh);
   }
+
 }
 
 void FastPlannerManager::setGlobalWaypoints(vector<Eigen::Vector3d>& waypoints) {
@@ -106,7 +107,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
   std::cout << "[kino replan]: -----------------------" << std::endl;
   cout << "start: " << start_pt.transpose() << ", " << start_vel.transpose() << ", "
        << start_acc.transpose() << "\ngoal:" << end_pt.transpose() << ", " << end_vel.transpose()
-       << endl;
+       << endl;//.transpose 矩阵的转置矩阵
 
   if ((start_pt - end_pt).norm() < 0.2) {
     cout << "Close goal" << endl;
@@ -122,7 +123,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
   Eigen::Vector3d init_vel = start_vel;
   Eigen::Vector3d init_acc = start_acc;
 
-  // kinodynamic path searching
+  // kinodynamic path searching 
 
   t1 = ros::Time::now();
 
@@ -148,15 +149,16 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
     cout << "[kino replan]: kinodynamic search success." << endl;
   }
 
-  plan_data_.kino_path_ = kino_path_finder_->getKinoTraj(0.01);
+  plan_data_.kino_path_ = kino_path_finder_->getKinoTraj(0.01);//根据path_nodes_ 插入或扩展得到的路径的三维坐标点
 
   t_search = (ros::Time::now() - t1).toSec();
 
   // parameterize the path to bspline
 
-  double                  ts = pp_.ctrl_pt_dist / pp_.max_vel_;
+  double   ts = pp_.ctrl_pt_dist / pp_.max_vel_;  //0.5/3
   vector<Eigen::Vector3d> point_set, start_end_derivatives;
-  kino_path_finder_->getSamples(ts, point_set, start_end_derivatives);
+  kino_path_finder_->getSamples(ts, point_set, start_end_derivatives);//下一行
+  //插入路径点到point_set 两相邻路径点之间距离不会超过 pp_.ctrl_pt_dist=0.5，start end_v / start end acc状态放入start_end_derivatives
 
   Eigen::MatrixXd ctrl_pts;
   NonUniformBspline::parameterizeToBspline(ts, point_set, start_end_derivatives, ctrl_pts);
@@ -608,7 +610,7 @@ void FastPlannerManager::planYaw(const Eigen::Vector3d& start_yaw) {
     if (pd.norm() > 1e-6) {
       waypt(0) = atan2(pd(1), pd(0));
       waypt(1) = waypt(2) = 0.0;
-      calcNextYaw(last_yaw, waypt(0));
+      calcNextYaw(last_yaw, waypt(0));  // round yaw to [-PI, PI]
     } else {
       waypt = waypts.back();
     }

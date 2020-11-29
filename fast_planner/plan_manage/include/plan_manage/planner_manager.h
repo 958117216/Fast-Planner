@@ -38,9 +38,9 @@ public:
 
   bool checkTrajCollision(double& distance);
 
-  PlanParameters pp_;
-  LocalTrajData local_data_;
-  GlobalTrajData global_data_;
+  PlanParameters pp_;  //struct
+  LocalTrajData local_data_; 
+  GlobalTrajData global_data_; //class
   MidPlanData plan_data_;
   EDTEnvironment::Ptr edt_environment_;
 

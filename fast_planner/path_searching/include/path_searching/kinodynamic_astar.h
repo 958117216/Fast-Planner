@@ -65,7 +65,7 @@ struct matrix_hash : std::unary_function<T, size_t> {
 class NodeHashTable {
 private:
   /* data */
-  std::unordered_map<Eigen::Vector3i, PathNodePtr, matrix_hash<Eigen::Vector3i>> data_3d_;
+  std::unordered_map<Eigen::Vector3i, PathNodePtr, matrix_hash<Eigen::Vector3i>> data_3d_;//??
   std::unordered_map<Eigen::Vector4i, PathNodePtr, matrix_hash<Eigen::Vector4i>> data_4d_;
 
 public:

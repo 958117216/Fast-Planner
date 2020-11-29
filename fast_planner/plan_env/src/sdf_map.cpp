@@ -7,60 +7,60 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
   node_ = nh;
 
   /* get parameter */
-  double x_size, y_size, z_size;
-  node_.param("sdf_map/resolution", mp_.resolution_, -1.0);
-  node_.param("sdf_map/map_size_x", x_size, -1.0);
-  node_.param("sdf_map/map_size_y", y_size, -1.0);
-  node_.param("sdf_map/map_size_z", z_size, -1.0);
-  node_.param("sdf_map/local_update_range_x", mp_.local_update_range_(0), -1.0);
-  node_.param("sdf_map/local_update_range_y", mp_.local_update_range_(1), -1.0);
-  node_.param("sdf_map/local_update_range_z", mp_.local_update_range_(2), -1.0);
-  node_.param("sdf_map/obstacles_inflation", mp_.obstacles_inflation_, -1.0);
+  double x_size, y_size, z_size;  
+  node_.param("sdf_map/resolution", mp_.resolution_, -1.0);//0.1 比例尺 mp_：SDFMap私有成员
+  node_.param("sdf_map/map_size_x", x_size, -1.0);//40
+  node_.param("sdf_map/map_size_y", y_size, -1.0);//20
+  node_.param("sdf_map/map_size_z", z_size, -1.0);//5
+  node_.param("sdf_map/local_update_range_x", mp_.local_update_range_(0), -1.0);//5.5
+  node_.param("sdf_map/local_update_range_y", mp_.local_update_range_(1), -1.0);//5.5
+  node_.param("sdf_map/local_update_range_z", mp_.local_update_range_(2), -1.0);//4
+  node_.param("sdf_map/obstacles_inflation", mp_.obstacles_inflation_, -1.0);//障碍物膨胀0.099
 
-  node_.param("sdf_map/fx", mp_.fx_, -1.0);
+  node_.param("sdf_map/fx", mp_.fx_, -1.0);//相机的标定系数
   node_.param("sdf_map/fy", mp_.fy_, -1.0);
   node_.param("sdf_map/cx", mp_.cx_, -1.0);
   node_.param("sdf_map/cy", mp_.cy_, -1.0);
 
   node_.param("sdf_map/use_depth_filter", mp_.use_depth_filter_, true);
-  node_.param("sdf_map/depth_filter_tolerance", mp_.depth_filter_tolerance_, -1.0);
-  node_.param("sdf_map/depth_filter_maxdist", mp_.depth_filter_maxdist_, -1.0);
-  node_.param("sdf_map/depth_filter_mindist", mp_.depth_filter_mindist_, -1.0);
-  node_.param("sdf_map/depth_filter_margin", mp_.depth_filter_margin_, -1);
-  node_.param("sdf_map/k_depth_scaling_factor", mp_.k_depth_scaling_factor_, -1.0);
-  node_.param("sdf_map/skip_pixel", mp_.skip_pixel_, -1);
+  node_.param("sdf_map/depth_filter_tolerance", mp_.depth_filter_tolerance_, -1.0);//公差0.15
+  node_.param("sdf_map/depth_filter_maxdist", mp_.depth_filter_maxdist_, -1.0);//5
+  node_.param("sdf_map/depth_filter_mindist", mp_.depth_filter_mindist_, -1.0);//0.2
+  node_.param("sdf_map/depth_filter_margin", mp_.depth_filter_margin_, -1);//余量2
+  node_.param("sdf_map/k_depth_scaling_factor", mp_.k_depth_scaling_factor_, -1.0);//1000
+  node_.param("sdf_map/skip_pixel", mp_.skip_pixel_, -1);//2 
+   //<!-- local fusion -->
+  node_.param("sdf_map/p_hit", mp_.p_hit_, 0.70);//0.65
+  node_.param("sdf_map/p_miss", mp_.p_miss_, 0.35);//0.35
+  node_.param("sdf_map/p_min", mp_.p_min_, 0.12);//0.12
+  node_.param("sdf_map/p_max", mp_.p_max_, 0.97);//0.90
+  node_.param("sdf_map/p_occ", mp_.p_occ_, 0.80);//0.80
+  node_.param("sdf_map/min_ray_length", mp_.min_ray_length_, -0.1);//0.5
+  node_.param("sdf_map/max_ray_length", mp_.max_ray_length_, -0.1);//4.5
 
-  node_.param("sdf_map/p_hit", mp_.p_hit_, 0.70);
-  node_.param("sdf_map/p_miss", mp_.p_miss_, 0.35);
-  node_.param("sdf_map/p_min", mp_.p_min_, 0.12);
-  node_.param("sdf_map/p_max", mp_.p_max_, 0.97);
-  node_.param("sdf_map/p_occ", mp_.p_occ_, 0.80);
-  node_.param("sdf_map/min_ray_length", mp_.min_ray_length_, -0.1);
-  node_.param("sdf_map/max_ray_length", mp_.max_ray_length_, -0.1);
-
-  node_.param("sdf_map/esdf_slice_height", mp_.esdf_slice_height_, -0.1);
-  node_.param("sdf_map/visualization_truncate_height", mp_.visualization_truncate_height_, -0.1);
-  node_.param("sdf_map/virtual_ceil_height", mp_.virtual_ceil_height_, -0.1);
+  node_.param("sdf_map/esdf_slice_height", mp_.esdf_slice_height_, -0.1);//0.3
+  node_.param("sdf_map/visualization_truncate_height", mp_.visualization_truncate_height_, -0.1);//2.49
+  node_.param("sdf_map/virtual_ceil_height", mp_.virtual_ceil_height_, -0.1);//2.5
 
   node_.param("sdf_map/show_occ_time", mp_.show_occ_time_, false);
   node_.param("sdf_map/show_esdf_time", mp_.show_esdf_time_, false);
-  node_.param("sdf_map/pose_type", mp_.pose_type_, 1);
+  node_.param("sdf_map/pose_type", mp_.pose_type_, 1);  //1
 
   node_.param("sdf_map/frame_id", mp_.frame_id_, string("world"));
-  node_.param("sdf_map/local_bound_inflate", mp_.local_bound_inflate_, 1.0);
-  node_.param("sdf_map/local_map_margin", mp_.local_map_margin_, 1);
-  node_.param("sdf_map/ground_height", mp_.ground_height_, 1.0);
+  node_.param("sdf_map/local_bound_inflate", mp_.local_bound_inflate_, 1.0);//0
+  node_.param("sdf_map/local_map_margin", mp_.local_map_margin_, 1);//50
+  node_.param("sdf_map/ground_height", mp_.ground_height_, 1.0);//-1
 
-  mp_.local_bound_inflate_ = max(mp_.resolution_, mp_.local_bound_inflate_);
-  mp_.resolution_inv_ = 1 / mp_.resolution_;
-  mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
-  mp_.map_size_ = Eigen::Vector3d(x_size, y_size, z_size);
+  mp_.local_bound_inflate_ = max(mp_.resolution_, mp_.local_bound_inflate_);//0.1
+  mp_.resolution_inv_ = 1 / mp_.resolution_;//10
+  mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);//-20 -10 -1
+  mp_.map_size_ = Eigen::Vector3d(x_size, y_size, z_size);//40 20 5
 
-  mp_.prob_hit_log_ = logit(mp_.p_hit_);
-  mp_.prob_miss_log_ = logit(mp_.p_miss_);
-  mp_.clamp_min_log_ = logit(mp_.p_min_);
-  mp_.clamp_max_log_ = logit(mp_.p_max_);
-  mp_.min_occupancy_log_ = logit(mp_.p_occ_);
+  mp_.prob_hit_log_ = logit(mp_.p_hit_);//0.27
+  mp_.prob_miss_log_ = logit(mp_.p_miss_);//-0.27
+  mp_.clamp_min_log_ = logit(mp_.p_min_);//-0.86
+  mp_.clamp_max_log_ = logit(mp_.p_max_);//0.95
+  mp_.min_occupancy_log_ = logit(mp_.p_occ_);//0.6
   mp_.unknown_flag_ = 0.01;
 
   cout << "hit: " << mp_.prob_hit_log_ << endl;
@@ -70,18 +70,18 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
   cout << "thresh log: " << mp_.min_occupancy_log_ << endl;
 
   for (int i = 0; i < 3; ++i) mp_.map_voxel_num_(i) = ceil(mp_.map_size_(i) / mp_.resolution_);
+// 地图的网格数量大小 mp_.map_voxel_num_(0)=400  mp_.map_voxel_num_(1)=200  mp_.map_voxel_num_(2)=50 
+  mp_.map_min_boundary_ = mp_.map_origin_;//-20 -10  -1
+  mp_.map_max_boundary_ = mp_.map_origin_ + mp_.map_size_;//20 10 4
 
-  mp_.map_min_boundary_ = mp_.map_origin_;
-  mp_.map_max_boundary_ = mp_.map_origin_ + mp_.map_size_;
-
-  mp_.map_min_idx_ = Eigen::Vector3i::Zero();
-  mp_.map_max_idx_ = mp_.map_voxel_num_ - Eigen::Vector3i::Ones();
+  mp_.map_min_idx_ = Eigen::Vector3i::Zero();//0 0 0
+  mp_.map_max_idx_ = mp_.map_voxel_num_ - Eigen::Vector3i::Ones();//399 199 49
 
   // initialize data buffers
 
   int buffer_size = mp_.map_voxel_num_(0) * mp_.map_voxel_num_(1) * mp_.map_voxel_num_(2);
-
-  md_.occupancy_buffer_ = vector<double>(buffer_size, mp_.clamp_min_log_ - mp_.unknown_flag_);
+//400*200*50
+  md_.occupancy_buffer_ = vector<double>(buffer_size, mp_.clamp_min_log_ - mp_.unknown_flag_);//赋值-0.87
   md_.occupancy_buffer_neg = vector<char>(buffer_size, 0);
   md_.occupancy_buffer_inflate_ = vector<char>(buffer_size, 0);
 
@@ -91,17 +91,17 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
 
   md_.count_hit_and_miss_ = vector<short>(buffer_size, 0);
   md_.count_hit_ = vector<short>(buffer_size, 0);
-  md_.flag_rayend_ = vector<char>(buffer_size, -1);
-  md_.flag_traverse_ = vector<char>(buffer_size, -1);
+  md_.flag_rayend_ = vector<char>(buffer_size, -1);  
+  md_.flag_traverse_ = vector<char>(buffer_size, -1);//遍历
 
   md_.tmp_buffer1_ = vector<double>(buffer_size, 0);
   md_.tmp_buffer2_ = vector<double>(buffer_size, 0);
   md_.raycast_num_ = 0;
 
-  md_.proj_points_.resize(640 * 480 / mp_.skip_pixel_ / mp_.skip_pixel_);
+  md_.proj_points_.resize(640 * 480 / mp_.skip_pixel_ / mp_.skip_pixel_);//640*480/2/2
   md_.proj_points_cnt = 0;
 
-  /* init callback */
+  /* init callback */ //时间同步器 message_filters::sync_policies::ApproximateTime的定义
 
   depth_sub_.reset(new message_filters::Subscriber<sensor_msgs::Image>(node_, "/sdf_map/depth", 50));
 
@@ -123,8 +123,12 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
 
   // use odometry and point cloud
 
+      //由相机的pos得到待更新的局部区域，最终 令md_.occupancy_buffer_inflate_[膨胀后的点地址]=1 
+      //得到局部边界 md_.local_bound_max_和 md_.local_bound_min_
   indep_cloud_sub_ =
       node_.subscribe<sensor_msgs::PointCloud2>("/sdf_map/cloud", 10, &SDFMap::cloudCallback, this);
+
+      //获得相机的位置pos
   indep_odom_sub_ =
       node_.subscribe<nav_msgs::Odometry>("/sdf_map/odom", 10, &SDFMap::odomCallback, this);
 
@@ -154,8 +158,8 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
   md_.max_esdf_time_ = 0.0;
   md_.max_fuse_time_ = 0.0;
 
-  rand_noise_ = uniform_real_distribution<double>(-0.2, 0.2);
-  rand_noise2_ = normal_distribution<double>(0, 0.2);
+  rand_noise_ = uniform_real_distribution<double>(-0.2, 0.2);//噪声
+  rand_noise2_ = normal_distribution<double>(0, 0.2);//噪声
   random_device rd;
   eng_ = default_random_engine(rd());
 }
@@ -176,14 +180,14 @@ void SDFMap::resetBuffer(Eigen::Vector3d min_pos, Eigen::Vector3d max_pos) {
   posToIndex(min_pos, min_id);
   posToIndex(max_pos, max_id);
 
-  boundIndex(min_id);
+  boundIndex(min_id);//计算局部感知区域的大小边界 序列表示 最小为0
   boundIndex(max_id);
 
   /* reset occ and dist buffer */
   for (int x = min_id(0); x <= max_id(0); ++x)
     for (int y = min_id(1); y <= max_id(1); ++y)
       for (int z = min_id(2); z <= max_id(2); ++z) {
-        md_.occupancy_buffer_inflate_[toAddress(x, y, z)] = 0;
+        md_.occupancy_buffer_inflate_[toAddress(x, y, z)] = 0;  //占用_缓冲区_膨胀
         md_.distance_buffer_[toAddress(x, y, z)] = 10000;
       }
 }
@@ -198,6 +202,15 @@ void SDFMap::fillESDF(F_get_val f_get_val, F_set_val f_set_val, int start, int e
   z[start] = -std::numeric_limits<double>::max();
   z[start + 1] = std::numeric_limits<double>::max();
 
+  /*    fillESDF(
+          [&](int z) {
+            return md_.occupancy_buffer_inflate_[toAddress(x, y, z)] == 1 ?
+                0 :
+                std::numeric_limits<double>::max();//返回 编译器允许的 double 型数 最大值。
+          },
+          [&](int z, double val) { md_.tmp_buffer1_[toAddress(x, y, z)] = val; }, min_esdf[2],
+          max_esdf[2], 2);*/
+          
   for (int q = start + 1; q <= end; q++) {
     k++;
     double s;
@@ -235,7 +248,7 @@ void SDFMap::updateESDF3d() {
           [&](int z) {
             return md_.occupancy_buffer_inflate_[toAddress(x, y, z)] == 1 ?
                 0 :
-                std::numeric_limits<double>::max();
+                std::numeric_limits<double>::max();//返回 编译器允许的 double 型数 最大值。
           },
           [&](int z, double val) { md_.tmp_buffer1_[toAddress(x, y, z)] = val; }, min_esdf[2],
           max_esdf[2], 2);
@@ -321,7 +334,7 @@ void SDFMap::updateESDF3d() {
         md_.distance_buffer_all_[idx] = md_.distance_buffer_[idx];
 
         if (md_.distance_buffer_neg_[idx] > 0.0)
-          md_.distance_buffer_all_[idx] += (-md_.distance_buffer_neg_[idx] + mp_.resolution_);
+          md_.distance_buffer_all_[idx] += (-md_.distance_buffer_neg_[idx] + mp_.resolution_); 
       }
 }
 
@@ -354,7 +367,7 @@ void SDFMap::projectDepthImage() {
 
   double depth;
 
-  Eigen::Matrix3d camera_r = md_.camera_q_.toRotationMatrix();
+  Eigen::Matrix3d camera_r = md_.camera_q_.toRotationMatrix(); //四元数转换为旋转矩阵
 
   // cout << "rotate: " << md_.camera_q_.toRotationMatrix() << endl;
   // std::cout << "pos in proj: " << md_.camera_pos_ << std::endl;
@@ -391,7 +404,7 @@ void SDFMap::projectDepthImage() {
       const double inv_factor = 1.0 / mp_.k_depth_scaling_factor_;
 
       for (int v = mp_.depth_filter_margin_; v < rows - mp_.depth_filter_margin_; v += mp_.skip_pixel_) {
-        row_ptr = md_.depth_image_.ptr<uint16_t>(v) + mp_.depth_filter_margin_;
+        row_ptr = md_.depth_image_.ptr<uint16_t>(v) + mp_.depth_filter_margin_;   //？？
 
         for (int u = mp_.depth_filter_margin_; u < cols - mp_.depth_filter_margin_;
              u += mp_.skip_pixel_) {
@@ -553,7 +566,7 @@ void SDFMap::raycastProcess() {
   int esdf_inf = ceil(mp_.local_bound_inflate_ / mp_.resolution_);
   md_.local_bound_max_ += esdf_inf * Eigen::Vector3i(1, 1, 0);
   md_.local_bound_min_ -= esdf_inf * Eigen::Vector3i(1, 1, 0);
-  boundIndex(md_.local_bound_min_);
+  boundIndex(md_.local_bound_min_);  //防止越界
   boundIndex(md_.local_bound_max_);
 
   md_.local_updated_ = true;
@@ -572,20 +585,20 @@ void SDFMap::raycastProcess() {
 
   while (!md_.cache_voxel_.empty()) {
 
-    Eigen::Vector3i idx = md_.cache_voxel_.front();
+    Eigen::Vector3i idx = md_.cache_voxel_.front(); //取第一个元素
     int idx_ctns = toAddress(idx);
-    md_.cache_voxel_.pop();
+    md_.cache_voxel_.pop();   //从队列里弹出第一个元素
 
     double log_odds_update =
         md_.count_hit_[idx_ctns] >= md_.count_hit_and_miss_[idx_ctns] - md_.count_hit_[idx_ctns] ?
-        mp_.prob_hit_log_ :
-        mp_.prob_miss_log_;
+        mp_.prob_hit_log_ ://0.27
+        mp_.prob_miss_log_;//-0.27
 
     md_.count_hit_[idx_ctns] = md_.count_hit_and_miss_[idx_ctns] = 0;
 
-    if (log_odds_update >= 0 && md_.occupancy_buffer_[idx_ctns] >= mp_.clamp_max_log_) {
+    if (log_odds_update >= 0 && md_.occupancy_buffer_[idx_ctns] >= mp_.clamp_max_log_) {  // mp_.clamp_max_log_=0.95
       continue;
-    } else if (log_odds_update <= 0 && md_.occupancy_buffer_[idx_ctns] <= mp_.clamp_min_log_) {
+    } else if (log_odds_update <= 0 && md_.occupancy_buffer_[idx_ctns] <= mp_.clamp_min_log_) { //-0.86
       md_.occupancy_buffer_[idx_ctns] = mp_.clamp_min_log_;
       continue;
     }
@@ -694,9 +707,9 @@ void SDFMap::clearAndInflateLocalMap() {
 
   // inflate occupied voxels to compensate robot size
 
-  int inf_step = ceil(mp_.obstacles_inflation_ / mp_.resolution_);
+  int inf_step = ceil(mp_.obstacles_inflation_ / mp_.resolution_);//1
   // int inf_step_z = 1;
-  vector<Eigen::Vector3i> inf_pts(pow(2 * inf_step + 1, 3));
+  vector<Eigen::Vector3i> inf_pts(pow(2 * inf_step + 1, 3)); //（2 * inf_step + 1）的3次方
   // inf_pts.resize(4 * inf_step + 3);
   Eigen::Vector3i inf_pt;
 
@@ -740,11 +753,11 @@ void SDFMap::clearAndInflateLocalMap() {
 void SDFMap::visCallback(const ros::TimerEvent& /*event*/) {
   publishMap();
   publishMapInflate(false);
-  // publishUpdateRange();
-  // publishESDF();
+  publishUpdateRange();
+  publishESDF();
 
-  // publishUnknown();
-  // publishDepth();
+   publishUnknown();
+   publishDepth();
 }
 
 void SDFMap::updateOccupancyCallback(const ros::TimerEvent& /*event*/) {
@@ -800,8 +813,8 @@ void SDFMap::depthPoseCallback(const sensor_msgs::ImageConstPtr& img,
   cv_bridge::CvImagePtr cv_ptr;
   cv_ptr = cv_bridge::toCvCopy(img, img->encoding);
 
-  if (img->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {
-    (cv_ptr->image).convertTo(cv_ptr->image, CV_16UC1, mp_.k_depth_scaling_factor_);
+  if (img->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {  //opencv 中进行的操作
+    (cv_ptr->image).convertTo(cv_ptr->image, CV_16UC1, mp_.k_depth_scaling_factor_);  //类型转换 imag*1000
   }
   cv_ptr->image.copyTo(md_.depth_image_);
 
@@ -846,26 +859,27 @@ void SDFMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr& img) {
 
   if (latest_cloud.points.size() == 0) return;
 
-  if (isnan(md_.camera_pos_(0)) || isnan(md_.camera_pos_(1)) || isnan(md_.camera_pos_(2))) return;
+    //判断是不是相机的三轴pos是不是NAN 
+  if (isnan(md_.camera_pos_(0)) || isnan(md_.camera_pos_(1)) || isnan(md_.camera_pos_(2))) return; 
 
-  this->resetBuffer(md_.camera_pos_ - mp_.local_update_range_,
+  this->resetBuffer(md_.camera_pos_ - mp_.local_update_range_,  //由相机的位置md_.camera_pos_确定occ和dis两个buff的清除区域
                     md_.camera_pos_ + mp_.local_update_range_);
 
   pcl::PointXYZ pt;
   Eigen::Vector3d p3d, p3d_inf;
 
-  int inf_step = ceil(mp_.obstacles_inflation_ / mp_.resolution_);
+  int inf_step = ceil(mp_.obstacles_inflation_ / mp_.resolution_); // 0.099/0.1=0.99  ——>1
   int inf_step_z = 1;
 
   double max_x, max_y, max_z, min_x, min_y, min_z;
 
-  min_x = mp_.map_max_boundary_(0);
-  min_y = mp_.map_max_boundary_(1);
-  min_z = mp_.map_max_boundary_(2);
+  min_x = mp_.map_max_boundary_(0); //20
+  min_y = mp_.map_max_boundary_(1); //10
+  min_z = mp_.map_max_boundary_(2); //4
 
-  max_x = mp_.map_min_boundary_(0);
-  max_y = mp_.map_min_boundary_(1);
-  max_z = mp_.map_min_boundary_(2);
+  max_x = mp_.map_min_boundary_(0);  //-20
+  max_y = mp_.map_min_boundary_(1);  //-10
+  max_z = mp_.map_min_boundary_(2);  //-1
 
   for (size_t i = 0; i < latest_cloud.points.size(); ++i) {
     pt = latest_cloud.points[i];
@@ -901,12 +915,12 @@ void SDFMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr& img) {
 
             int idx_inf = toAddress(inf_pt);
 
-            md_.occupancy_buffer_inflate_[idx_inf] = 1;
+            md_.occupancy_buffer_inflate_[idx_inf] = 1;  
           }
     }
   }
 
-  min_x = min(min_x, md_.camera_pos_(0));
+  min_x = min(min_x, md_.camera_pos_(0)); //？？
   min_y = min(min_y, md_.camera_pos_(1));
   min_z = min(min_z, md_.camera_pos_(2));
 
@@ -919,7 +933,7 @@ void SDFMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr& img) {
   posToIndex(Eigen::Vector3d(max_x, max_y, max_z), md_.local_bound_max_);
   posToIndex(Eigen::Vector3d(min_x, min_y, min_z), md_.local_bound_min_);
 
-  boundIndex(md_.local_bound_min_);
+  boundIndex(md_.local_bound_min_);  //防止超过边界
   boundIndex(md_.local_bound_max_);
 
   md_.esdf_need_update_ = true;

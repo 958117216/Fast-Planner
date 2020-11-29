@@ -13,8 +13,8 @@ NonUniformBspline::~NonUniformBspline() {}
 void NonUniformBspline::setUniformBspline(const Eigen::MatrixXd& points, const int& order,
                                           const double& interval) {
   control_points_ = points;
-  p_              = order;
-  interval_       = interval;
+  p_              = order;//3
+  interval_       = interval;//ts
 
   n_ = points.rows() - 1;
   m_ = n_ + p_ + 1;
@@ -51,7 +51,7 @@ pair<Eigen::VectorXd, Eigen::VectorXd> NonUniformBspline::getHeadTailPts() {
 
 Eigen::VectorXd NonUniformBspline::evaluateDeBoor(const double& u) {
 
-  double ub = min(max(u_(p_), u), u_(m_ - p_));
+  double ub = min(max(u_(p_), u), u_(m_ - p_));//确保u在定义域内
 
   // determine which [ui,ui+1] lay in
   int k = p_;
@@ -60,7 +60,7 @@ Eigen::VectorXd NonUniformBspline::evaluateDeBoor(const double& u) {
     ++k;
   }
 
-  /* deBoor's alg */
+  /* deBoor's alg */ //取决定该段曲线的四个控制点
   vector<Eigen::VectorXd> d;
   for (int i = 0; i <= p_; ++i) {
     d.push_back(control_points_.row(k - p_ + i));
@@ -191,7 +191,7 @@ double NonUniformBspline::checkRatio() {
 
   return ratio;
 }
-
+            //重新分配时间
 bool NonUniformBspline::reallocateTime(bool show) {
   // SETY << "[Bspline]: total points size: " << control_points_.rows() << endl;
   // cout << "origin knots:\n" << u_.transpose() << endl;
@@ -334,9 +334,9 @@ void NonUniformBspline::parameterizeToBspline(const double& ts, const vector<Eig
 
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(K + 4, K + 2);
 
-  for (int i = 0; i < K; ++i) A.block(i, i, 1, 3) = (1 / 6.0) * prow.transpose();
+  for (int i = 0; i < K; ++i) A.block(i, i, 1, 3) = (1 / 6.0) * prow.transpose();//P(i : i+rows-1, j : j+cols-1) //块  
 
-  A.block(K, 0, 1, 3)         = (1 / 2.0 / ts) * vrow.transpose();
+  A.block(K, 0, 1, 3)         = (1 / 2.0 / ts) * vrow.transpose();//.transpose 转置
   A.block(K + 1, K - 1, 1, 3) = (1 / 2.0 / ts) * vrow.transpose();
 
   A.block(K + 2, 0, 1, 3)     = (1 / ts / ts) * arow.transpose();

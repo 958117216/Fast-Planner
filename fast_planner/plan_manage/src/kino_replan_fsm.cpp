@@ -10,11 +10,11 @@ void KinoReplanFSM::init(ros::NodeHandle& nh) {
   have_odom_   = false;
 
   /*  fsm param  */
-  nh.param("fsm/flight_type", target_type_, -1);
-  nh.param("fsm/thresh_replan", replan_thresh_, -1.0);
-  nh.param("fsm/thresh_no_replan", no_replan_thresh_, -1.0);
+  nh.param("fsm/flight_type", target_type_, -1);//1 手动选择目标 munual target
+  nh.param("fsm/thresh_replan", replan_thresh_, -1.0);//1.5
+  nh.param("fsm/thresh_no_replan", no_replan_thresh_, -1.0);//2
 
-  nh.param("fsm/waypoint_num", waypoint_num_, -1);
+  nh.param("fsm/waypoint_num", waypoint_num_, -1);  //2
   for (int i = 0; i < waypoint_num_; i++) {
     nh.param("fsm/waypoint" + to_string(i) + "_x", waypoints_[i][0], -1.0);
     nh.param("fsm/waypoint" + to_string(i) + "_y", waypoints_[i][1], -1.0);
@@ -22,21 +22,57 @@ void KinoReplanFSM::init(ros::NodeHandle& nh) {
   }
 
   /* initialize main modules */
-  planner_manager_.reset(new FastPlannerManager);
+  planner_manager_.reset(new FastPlannerManager);//指针重新指向（赋值）
   planner_manager_->initPlanModules(nh);
   visualization_.reset(new PlanningVisualization(nh));
 
   /* callback */
-  exec_timer_   = nh.createTimer(ros::Duration(0.01), &KinoReplanFSM::execFSMCallback, this);
-  safety_timer_ = nh.createTimer(ros::Duration(0.05), &KinoReplanFSM::checkCollisionCallback, this);
+  exec_timer_   = nh.createTimer(ros::Duration(0.01), &KinoReplanFSM::execFSMCallback, this);//定时0.01s
+  safety_timer_ = nh.createTimer(ros::Duration(0.05), &KinoReplanFSM::checkCollisionCallback, this);//定时0.05s
 
-  waypoint_sub_ =
-      nh.subscribe("/waypoint_generator/waypoints", 1, &KinoReplanFSM::waypointCallback, this);
+ /**
+   * The subscribe() call is how you tell ROS that you want to receive messages
+   * on a given topic.  This invokes a call to the ROS
+   * master node, which keeps a registry of who is publishing and who
+   * is subscribing.  Messages are passed to a callback function, here
+   * called chatterCallback.  subscribe() returns a Subscriber object that you
+   * must hold on to until you want to unsubscribe.  When all copies of the Subscriber
+   * object go out of scope, this callback will automatically be unsubscribed from
+   * this topic.
+   *
+   * The second parameter to the subscribe() function is the size of the message
+   * queue.  If messages are arriving faster than they are being processed, this
+   * is the number of messages that will be buffered up before beginning to throw
+   * away the oldest ones.
+   */
+// %Tag(SUBSCRIBER)%
+// 订阅指定主题，并指定回调函数，1000为队列大小，当我们来不及处理消息时，会存储在该队列中，若队列元素大于1000，则会抛弃老的消息
+  waypoint_sub_ = nh.subscribe("/waypoint_generator/waypoints", 1, &KinoReplanFSM::waypointCallback, this);
   odom_sub_ = nh.subscribe("/odom_world", 1, &KinoReplanFSM::odometryCallback, this);
+  /*
+   * The advertise() function is how you tell ROS that you want to
+   * publish on a given topic name. This invokes a call to the ROS
+   * master node, which keeps a registry of who is publishing and who
+   * is subscribing. After this advertise() call is made, the master
+   * node will notify anyone who is trying to subscribe to this topic name,
+   * and they will in turn negotiate a peer-to-peer connection with this
+   * node.  advertise() returns a Publisher object which allows you to
+   * publish messages on that topic through a call to publish().  Once
+   * all copies of the returned Publisher object are destroyed, the topic
+   * will be automatically unadvertised.
+   *
+   * The second parameter to advertise() is the size of the message queue
+   * used for publishing messages.  If messages are published more quickly
+   * than we can send them, the number here specifies how many messages to
+   * buffer up before throwing some away.
+   */
 
+  // 该句告诉master主控节点，我们将在chatter主题中发布std_msgs的String消息，在我们发布消息时，
+  // 主控节点将会告知所有订阅该主题的节点，消息队列大小为1000，即在队列里有消息超过1000个之后，才会丢弃以前老的消息
   replan_pub_  = nh.advertise<std_msgs::Empty>("/planning/replan", 10);
   new_pub_     = nh.advertise<std_msgs::Empty>("/planning/new", 10);
   bspline_pub_ = nh.advertise<plan_manage::Bspline>("/planning/bspline", 10);
+
 }
 
 void KinoReplanFSM::waypointCallback(const nav_msgs::PathConstPtr& msg) {
@@ -45,10 +81,13 @@ void KinoReplanFSM::waypointCallback(const nav_msgs::PathConstPtr& msg) {
   cout << "Triggered!" << endl;
   trigger_ = true;
 
-  if (target_type_ == TARGET_TYPE::MANUAL_TARGET) {
+  if (target_type_ == TARGET_TYPE::MANUAL_TARGET)
+  {
     end_pt_ << msg->poses[0].pose.position.x, msg->poses[0].pose.position.y, 1.0;
-
-  } else if (target_type_ == TARGET_TYPE::PRESET_TARGET) {
+  } 
+  
+  else if (target_type_ == TARGET_TYPE::PRESET_TARGET) 
+  {
     end_pt_(0)  = waypoints_[current_wp_][0];
     end_pt_(1)  = waypoints_[current_wp_][1];
     end_pt_(2)  = waypoints_[current_wp_][2];
@@ -131,7 +170,7 @@ void KinoReplanFSM::execFSMCallback(const ros::TimerEvent& e) {
       start_vel_ = odom_vel_;
       start_acc_.setZero();
 
-      Eigen::Vector3d rot_x = odom_orient_.toRotationMatrix().block(0, 0, 3, 1);
+      Eigen::Vector3d rot_x = odom_orient_.toRotationMatrix().block(0, 0, 3, 1);//起始于(0，0)，提取块大小为(3，1)	
       start_yaw_(0)         = atan2(rot_x(1), rot_x(0));
       start_yaw_(1) = start_yaw_(2) = 0.0;
 
@@ -165,7 +204,7 @@ void KinoReplanFSM::execFSMCallback(const ros::TimerEvent& e) {
         // cout << "near end" << endl;
         return;
 
-      } else if ((info->start_pos_ - pos).norm() < replan_thresh_) {
+      } else if ((info->start_pos_ - pos).norm() < replan_thresh_) { //1.5
         // cout << "near start" << endl;
         return;
 
@@ -291,6 +330,17 @@ bool KinoReplanFSM::callKinodynamicReplan() {
     auto info = &planner_manager_->local_data_;
 
     /* publish traj */
+/*消息格式
+int32 order      //阶数
+int64 traj_id    //id
+time start_time  //开始路径规划时间
+
+float64[] knots   //节点
+geometry_msgs/Point[] pos_pts    //轨迹控制点
+
+float64[] yaw_pts  //偏航角 控制点
+float64 yaw_dt     //间隔时间
+*/
     plan_manage::Bspline bspline;
     bspline.order      = 3;
     bspline.start_time = info->start_time_;
