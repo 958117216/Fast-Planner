@@ -1,4 +1,4 @@
-# Fast-Planner
+# Fast-Planner (is changed for ROS_Melodic)
 
 
 - __July 5, 2020__: We will release the implementation of paper: _RAPTOR: Robust and Perception-aware Trajectory Replanning for Quadrotor Fast Flight_ (submitted to TRO, under review) in the future.
